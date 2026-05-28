@@ -1,0 +1,48 @@
+# configuration for the energy forecast pipeline
+
+data:
+  raw_path: "data/raw/energy_data.csv"
+  processed_path: "data/processed/clean_data.parquet"
+  start_date: "2020-01-01"
+  end_date: "2023-12-31"
+  test_ratio: 0.2
+
+preprocessing:
+  # how to fill missing values: forward, mean, median
+  fill_strategy: "forward"
+  # how to handle outliers: cap, drop, none
+  outlier_strategy: "cap"
+  iqr_multiplier: 1.5
+
+features:
+  target: "consumption"
+  # which time features to create
+  time_features:
+    - "hour"
+    - "dayofweek" 
+    - "month"
+    - "is_weekend"
+  # past hours to use as features
+  lag_hours: [1, 2, 3, 6, 12, 24]
+  # rolling windows for statistics
+  rolling_windows: [6, 12, 24]
+
+model:
+  name: "xgboost"
+  parameters:
+    n_estimators: 200
+    max_depth: 5
+    learning_rate: 0.05
+    subsample: 0.8
+    colsample_bytree: 0.8
+    random_state: 42
+
+api:
+  host: "0.0.0.0"
+  port: 8000
+  model_path: "models/xgboost_model.json"
+
+monitoring:
+  log_dir: "logs"
+  alert_threshold_mae: 150
+  lookback_days: 7
